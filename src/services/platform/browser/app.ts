@@ -65,11 +65,19 @@ class BrowserApp implements IApp {
     }
 
     private _checkOnLaunch() {
-        this._launchCallback && this._launchCallback({ entry: 1000, query: _getQueryParams(), platform: 'browser' });
+        this._launchCallback && this._launchCallback({ scene: '', query: _getQueryParams(), platform: 'browser' });
     }
 
     public onPause(callback: () => void) {
         this._pauseCallback = callback;
+    }
+
+    public showGameClubButton(icon: string, x: number, y: number, w: number, h: number) {
+        // do nothing
+    }
+
+    public hideGameClubButton() {
+        // do nothing
     }
 
 }

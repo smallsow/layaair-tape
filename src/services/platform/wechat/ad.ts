@@ -1,26 +1,7 @@
 import platform, { WECHAT } from "../../../utils/platform";
 import screen from "../../manager/screen";
 import { IAd } from "../interfaces";
-
-function fixWidth(width) {
-    let systemInfo = platform.execWX('getSystemInfoSync');
-    if (systemInfo) {
-        let windowWidth = systemInfo.windowWidth;
-        let stageWidth = Laya.stage.width;
-        return width * windowWidth / stageWidth;
-    }
-    return width;
-}
-
-function fixHeight(height) {
-    let systemInfo = platform.execWX('getSystemInfoSync');
-    if (systemInfo) {
-        let windowHeight = systemInfo.windowHeight;
-        let stageHeight = Laya.stage.height;
-        return height * windowHeight / stageHeight;
-    }
-    return height;
-}
+import { fixWidth, fixHeight } from "./_size";
 
 class WXAd implements IAd {
 
@@ -75,58 +56,72 @@ class WXAd implements IAd {
     }
 
     public showBannerAd(x: number, y: number, width: number, height: number, onError?: (error: any) => void) {
-        this.hideBannerAd();
-        let left = fixWidth(x + screen.getOffestX());
-        let top = fixHeight(y + screen.getOffestY());
-        let realWidth = fixWidth(width);
-        let realHeight = fixHeight(height);
-        this._bannerAd = platform.execWX('createBannerAd', {
-            adUnitId: this._bannerAdId,
-            style: {
-                left,
-                top,
-                width: realWidth,
-                height: realHeight
+        try {
+            this.hideBannerAd();
+            let realLeft = fixWidth(x + screen.getOffestX());
+            let realTop = fixHeight(y + screen.getOffestY());
+            let realWidth = fixWidth(width);
+            let realHeight = fixHeight(height);
+            if (realWidth < 300) {
+                realWidth = 300;
             }
-        });
-        if (this._bannerAd) {
-            this._bannerAd.style.left = left;
-            this._bannerAd.style.top = top;
-            this._bannerAd.style.width = realWidth;
-            this._bannerAd.style.height = realHeight;
-            this._bannerAd.onResize(res => {
-                let oSc = realWidth / realHeight;
-                let nSc = res.width / res.height;
-                let newL = left;
-                let newT = top;
-                let newW = realWidth;
-                let newH = realHeight;
-                if (oSc < nSc) {
-                    newH = realWidth / nSc;
-                    newT = (realHeight - newH) / 2;
-                } else {
-                    newW = realHeight * nSc;
-                    newL = (realWidth - newW) / 2;
+            this._bannerAd = platform.execWX('createBannerAd', {
+                adUnitId: this._bannerAdId,
+                style: {
+                    left: realLeft,
+                    top: realTop,
+                    width: realWidth,
+                    height: realHeight
                 }
-                this._bannerAd.style.left = newL;
-                this._bannerAd.style.top = newT;
-                this._bannerAd.style.width = newW;
-                this._bannerAd.style.height = newH;
             });
-            this._bannerAd.onError(err => {
-                onError && onError(err && err.errMsg || 'showBannerAd:fail');
-            });
-            this._bannerAd.show();
-        } else {
-            onError && onError('createBannerAd:fail')
+            if (this._bannerAd) {
+                this._bannerAd.style.left = realLeft;
+                this._bannerAd.style.top = realTop;
+                this._bannerAd.style.width = realWidth;
+                this._bannerAd.style.height = realHeight;
+                this._bannerAd.onResize(res => {
+                    if (this._bannerAd) {
+                        let configZ = realWidth / realHeight;
+                        let newZ = res.width / res.height;
+                        let newL = realLeft;
+                        let newT = realTop;
+                        let newW = realWidth;
+                        let newH = realHeight;
+                        if (configZ < newZ) {
+                            newH = realWidth / newZ;
+                        } else {
+                            newW = realHeight * newZ;
+                        }
+                        if (newW < 300) {
+                            newW = 300;
+                        }
+                        newL = realLeft + ((realWidth - newW) / 2);
+                        this._bannerAd.style.left = newL;
+                        this._bannerAd.style.top = newT;
+                        this._bannerAd.style.width = newW;
+                        this._bannerAd.style.height = newH;
+                    }
+                });
+                this._bannerAd.onError(err => {
+                    onError && onError(err && err.errMsg || 'showBannerAd:fail');
+                });
+                this._bannerAd.show();
+            } else {
+                onError && onError('createBannerAd:fail')
+            }
+        } catch (error) {
+            onError && onError('showBannerAd:fail')
         }
     }
 
     public hideBannerAd() {
-        if (this._bannerAd && this._bannerAd.destroy) {
-            this._bannerAd.destroy();
+        try {
+            if (this._bannerAd && this._bannerAd.destroy) {
+                this._bannerAd.destroy();
+            }
+            this._bannerAd = null;
+        } catch (error) {
         }
-        this._bannerAd = null;
     }
 
 }

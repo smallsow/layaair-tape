@@ -63,7 +63,7 @@ declare module Tape {
     /** init for 3D */
     function init3D(width: number, height: number, ...options): void;
     /** start */
-    function start(options: startPayload): void;
+    function start(options: startPayload, callback?:() => void): void;
     /** exit */
     function exit(): void;
 
@@ -79,6 +79,10 @@ declare module Tape {
 
     /** screen */
     module screen {
+        /** getWidth */
+        function getWidth(): number;
+        /** getHeight */
+        function getHeight(): number;
         /** getOffestX */
         function getOffestX(): number;
         /** getOffestY */
@@ -141,12 +145,16 @@ declare module Tape {
 
     /** app */
     module app {
-        /** getUserInfo, use img for wechat: res/unpack/get_user_info.png */
-        function getUserInfo(callback: (userinfo: userinfoPayload) => void): void;
         /** onLaunch */
-        function onLaunch(callback: (options: obj) => void);
+        function onLaunch(callback: (options: { scene: string, query: obj, platform: string }) => void);
         /** onPause */
         function onPause(callback: () => void): void;
+        /** getUserInfo, use img for wechat: res/unpack/get_user_info.png */
+        function getUserInfo(callback: (userinfo: userinfoPayload) => void): void;
+        /** showGameClubButton */
+        function showGameClubButton(icon: string, x: number, y: number, w: number, h: number): void;
+        /** hideGameClubButton */
+        function hideGameClubButton(): void;
     }
 
     /** rank */
